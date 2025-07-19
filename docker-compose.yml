@@ -1,0 +1,39 @@
+version: '3'
+services:
+  php-environment:
+    container_name: php-apache
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+    volumes:
+      - ./php:/var/www/html/
+    ports:
+      - 8000:80
+    networks:
+      - app-network
+  mysql: 
+    container_name: "mysql"
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'erp'
+      MYSQL_USER: 'localdocker'
+      MYSQL_PASSWORD: 'localdocker'
+      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_DATA_DIR: '/var/lib/mysql' 
+      MYSQL_LOG_DIR: '/var/log/mysql'
+    ports:
+      - '33100:3306'
+    volumes:
+      - ./docker/init/mysql/:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+networks:
+  app-network:
+    driver: bridge

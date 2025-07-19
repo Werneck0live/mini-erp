@@ -1,0 +1,33 @@
+<?php
+
+require_once 'config/bd.php';
+
+class Produto {
+    private $pdo;
+
+    public function __construct() {        
+        $pdo = DB::getConnection();
+        $this->pdo = $pdo;
+
+    }
+    public function criar($nome, $preco, $variacoes) {
+        $stmt = $this->pdo->prepare("INSERT INTO produtos (nome, preco, variacoes) VALUES (?, ?, ?)");
+        return $stmt->execute([$nome, $preco, $variacoes]);
+    }
+
+    public function listar() {
+        $stmt = $this->pdo->query("SELECT * FROM produtos");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function atualizar($id, $nome, $preco, $variacoes) {
+        $stmt = $this->pdo->prepare("UPDATE produtos SET nome = ?, preco = ?, variacoes = ? WHERE id = ?");
+        return $stmt->execute([$nome, $preco, $variacoes, $id]);
+    }
+
+    public function obterPorId($id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM produtos WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+}
