@@ -1,14 +1,23 @@
 <?php
 require_once 'models/Pedido.php';
 require_once 'models/Produto.php';
+require_once 'models/Estoque.php';
 require_once 'models/Cupom.php';
 require_once 'config/bd.php';
 
-if (session_status() !== PHP_SESSION_ACTIVE && !headers_sent()) {
-    session_start();
-}
 
 class PedidoController {
+
+    public function __construct()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['carrinho'])) {
+            $_SESSION['carrinho'] = [];
+        }
+    }
 
     public function adicionar($produtoId) {
 
@@ -17,36 +26,80 @@ class PedidoController {
         
         $produto = new Produto();
         $produto_info = $produto->obterPorId($produto_id);
+
+
+        if (!$produto) {
+             // return ['erro' => 'Produto não encontrado.'];
+            header("Location: ../../produto/listar");
+        }
         
         if($quantidade > $produto_info['quantidade']){
             //TODO: tratamento de erro
-            // die(var_dump([
-            //     'quantidade-pedido'=> $quantidade,
-            //     'estoque'=>$produto_info['quantidade']
-            // ]));
-            // die('deu ruim');
+            // return ['erro' => 'Produto não encontrado.'];
+            header("Location: ../../produto/listar");
         } else {
 
-            $item = [
-                'produto_id' => $produto_id,
-                'nome' => $produto_info['nome'],
-                'quantidade' => $quantidade,
-                'preco_unitario' => $produto_info['preco'],
-                'estoque' => $produto_info['quantidade']
-            ];
-            
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
+            if (!isset($_SESSION['carrinho'][$produtoId])) {
+                $item = [
+                    'produto_id' => $produto_id,
+                    'nome' => $produto_info['nome'],
+                    'quantidade' => $quantidade,
+                    'preco_unitario' => $produto_info['preco'],
+                    'estoque' => $produto_info['quantidade']
+                ];
+                
+                $_SESSION['carrinho'][$produto_id] = $item;
+            } else {
+                $_SESSION['carrinho'][$produtoId]['quantidade'] += (int)$quantidade;
             }
-            
-            $_SESSION['carrinho'][] = $item;
         }
 
         header("Location: ../../produto/listar");
     }
 
-    public function finalizar($id){
-        $cep = $_POST['cep'];
+    public function removerItem($produtoId) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        if (!isset($_SESSION['carrinho'])) {
+            header("Location: /checkout");
+            exit;
+        }
+
+        $_SESSION['carrinho'] = array_filter($_SESSION['carrinho'], function ($item) use ($produtoId) {
+            return $item['produto_id'] != $produtoId;
+        });
+
+        header("Location: ../../pedido/checkout");
+    }
+    
+    public function finalizar(){
+        
+        if (isset($_POST['quantidade']) && is_array($_POST['quantidade'])) {
+            $carrinho = [];
+            foreach ($_POST['quantidade'] as $produtoId => $novaQtd) {
+                foreach ($_SESSION['carrinho'] as $key => &$item) {
+                    if ($item['produto_id'] == $produtoId) {
+                        $item['quantidade'] = (int) $novaQtd;
+                        $carrinho[] = $item;
+                    }
+                }
+            }
+
+        } else {
+            if(empty($_SESSION['carrinho'])){
+                header("Location: ../../pedido/checkout");
+                exit();
+            }
+
+            $carrinho = $_SESSION['carrinho'];
+        }
+
+        $cepCliente = $_POST['cep'];
+        $enderecoCliente = $_POST['endereco'];
+        $emailCliente = $_POST['email'];
+        $status = 'pendente';
         
         // Calcular o subtotal
         $subtotal = 0;
@@ -67,17 +120,44 @@ class PedidoController {
         
         // Criar o pedido
         $pedido = new Pedido();
-        $pedido_id = $pedido->criar($subtotal, $frete, $total, $cep);
+        $pedidoId = $pedido->criar(
+            $subtotal,
+            $frete,
+            $total,
+            $status,
+            $cepCliente,
+            $enderecoCliente,
+            $emailCliente
+        );
 
-        // Adicionar os itens ao pedido
-        foreach ($_SESSION['carrinho'] as $item) {
-            $pedido->adicionarItem($pedido_id, $item['produto_id'], $item['quantidade'], $item['preco_unitario']);
+
+        if((bool)!($pedidoId)){
+            unset($_SESSION['carrinho']);
+            header("Location: ../views/pedidos/resumo.php?id=$pedidoId");
+        } else {
+            // Adicionar os itens ao pedido
+            $teste = [];
+            foreach ($carrinho as $item) {
+                $pedido->adicionarItem($pedidoId, $item['produto_id'], $item['quantidade'], $item['preco_unitario']);
+                $produtoEstoque = new Estoque();
+                $qtdEstoque = $item['estoque'] - $item['quantidade'];
+                $produtoEstoque->atualizarEstoque($item['produto_id'], $qtdEstoque);
+                $teste[] = [
+                    'produtoId' => $item['produto_id'],
+                    'qtdEstoque' => $qtdEstoque,
+                    'estoque' => $item['estoque'],
+                    'quantidade' => $item['quantidade']
+
+                ];
+            }
+             
+            mail($emailCliente, "Resumo do Pedido", "Total: R$" . number_format($total, 2, ',', '.'), "From: loja@minierp.com");
+            // Limpar o carrinho após finalizar
+            unset($_SESSION['carrinho']);
+            
+            header("Location: ../../produto/listar");
         }
-        
-        // Limpar o carrinho após finalizar
-        unset($_SESSION['carrinho']);
-        
-        header("Location: ../views/pedidos/resumo.php?id=$pedido_id");
+
     }
     
 }

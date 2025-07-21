@@ -12,9 +12,12 @@ class Produto {
     }
     public function criar($nome, $preco, $variacoes) {
         $stmt = $this->pdo->prepare("INSERT INTO produtos (nome, preco, variacoes) VALUES (?, ?, ?)");
-        $stmt->execute([$nome, $preco, $variacoes]);
-        $ultimoId = $this->pdo->lastInsertId();
-        return $ultimoId;
+        if($stmt->execute([$nome, $preco, $variacoes])){
+            $ultimoId = $this->pdo->lastInsertId();
+            return $ultimoId;            
+        } else {
+            return 0;
+        }
     }
 
     public function listar() {

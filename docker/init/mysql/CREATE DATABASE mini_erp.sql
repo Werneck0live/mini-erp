@@ -31,7 +31,10 @@ CREATE TABLE IF NOT EXISTS pedidos (
     total DECIMAL(10, 2) NOT NULL,
     cep VARCHAR(10) NOT NULL,
     status VARCHAR(50) NOT NULL,
-    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    endereco TEXT,
+    email_cliente VARCHAR(100),
+    data_pedido DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS itens_pedido (
