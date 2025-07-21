@@ -1,4 +1,6 @@
 <?php include 'views/template.php';?>
+    
+
     <div class="container">
         <h2 class="my-4">Lista de Produtos</h2>
         

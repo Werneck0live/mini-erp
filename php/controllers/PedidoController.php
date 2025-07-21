@@ -4,6 +4,8 @@ require_once 'models/Produto.php';
 require_once 'models/Estoque.php';
 require_once 'models/Cupom.php';
 require_once 'config/bd.php';
+require_once 'config/constants.php';
+require_once 'controllers/MailController.php';
 
 
 class PedidoController {
@@ -103,14 +105,14 @@ class PedidoController {
         
         // Calcular o subtotal
         $subtotal = 0;
-        foreach ($_SESSION['carrinho'] as $item) {
+        foreach ($carrinho as $item) {
             $subtotal += $item['quantidade'] * $item['preco_unitario'];
         }
         
         // Calcular o frete
-        if ($subtotal >= 200.00) {
+        if ($subtotal >= VALOR_MAXIMO_PEDIDO_PARA_FRETE) {
             $frete = 0;
-        } elseif ($subtotal >= 52.00 && $subtotal <= 166.59) {
+        } elseif ($subtotal >= VALOR_MINIMO_PEDIDO_PARA_FRETE && $subtotal <= VALOR_MEDIO_PEDIDO_PARA_FRETE) {
             $frete = 15.00;
         } else {
             $frete = 20.00;
@@ -136,23 +138,30 @@ class PedidoController {
             header("Location: ../views/pedidos/resumo.php?id=$pedidoId");
         } else {
             // Adicionar os itens ao pedido
-            $teste = [];
+            $descricaoItensEmail = '';
             foreach ($carrinho as $item) {
                 $pedido->adicionarItem($pedidoId, $item['produto_id'], $item['quantidade'], $item['preco_unitario']);
                 $produtoEstoque = new Estoque();
                 $qtdEstoque = $item['estoque'] - $item['quantidade'];
                 $produtoEstoque->atualizarEstoque($item['produto_id'], $qtdEstoque);
-                $teste[] = [
-                    'produtoId' => $item['produto_id'],
-                    'qtdEstoque' => $qtdEstoque,
-                    'estoque' => $item['estoque'],
-                    'quantidade' => $item['quantidade']
-
-                ];
+                
+                $descricaoItensEmail .= "\nitem: ".$item['nome']." - quantidade: " . $item['quantidade']
+                                        ." - valor unitário: ".$item['preco_unitario'] 
+                                        . " - subtotal: " .number_format($item['quantidade'] * $item['preco_unitario'], 2, ',', '.')
+                                        . "\n";
             }
-             
-            mail($emailCliente, "Resumo do Pedido", "Total: R$" . number_format($total, 2, ',', '.'), "From: loja@minierp.com");
-            // Limpar o carrinho após finalizar
+            
+            $tituloEmail = NOME_PROJETO . " - Resumo do Pedido número $pedidoId";
+            $corpoEmail  = "Olá, \n\nSegue as informações do seu pedido número $pedidoId:\n"
+                          . "\n".DIVISOR_TEXTO_EMAIL
+                          . $descricaoItensEmail
+                          . DIVISOR_TEXTO_EMAIL."\n\n"
+                          ."\nTotal: R$" . number_format($total, 2, ',', '.');            
+
+            $mail = new MailController();
+            $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
+            
+            // Limpando a sessão
             unset($_SESSION['carrinho']);
             
             header("Location: ../../produto/listar");
