@@ -1,8 +1,12 @@
 <?php
+
+require_once 'config/bd.php';
+
 class Pedido {
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct() {        
+        $pdo = DB::getConnection();
         $this->pdo = $pdo;
     }
 

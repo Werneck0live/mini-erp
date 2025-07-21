@@ -1,24 +1,28 @@
 <?php
+
+require_once 'config/bd.php';
+
 class Estoque {
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct() {        
+        $pdo = DB::getConnection();
         $this->pdo = $pdo;
     }
 
-    public function atualizarEstoque($produto_id, $quantidade) {
-        $stmt = $this->pdo->prepare("UPDATE estoque SET quantidade = quantidade - ? WHERE produto_id = ?");
-        return $stmt->execute([$quantidade, $produto_id]);
+    public function atualizarEstoque($produtoId, $quantidade) {
+        $stmt = $this->pdo->prepare("UPDATE estoque SET quantidade = ? WHERE produto_id = ?");
+        return $stmt->execute([$quantidade, $produtoId]);
     }
 
-    public function obterEstoque($produto_id) {
+    public function obterEstoque($produtoId) {
         $stmt = $this->pdo->prepare("SELECT quantidade FROM estoque WHERE produto_id = ?");
-        $stmt->execute([$produto_id]);
+        $stmt->execute([$produtoId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function adicionarEstoque($produto_id, $quantidade) {
-        $stmt = $this->pdo->prepare("UPDATE estoque SET quantidade = quantidade + ? WHERE produto_id = ?");
-        return $stmt->execute([$quantidade, $produto_id]);
+    public function adicionarEstoque($produtoId, $quantidade) {
+        $stmt = $this->pdo->prepare("INSERT INTO estoque (produto_id, quantidade) VALUES (?,?)");
+        return $stmt->execute([$produtoId, $quantidade]);
     }
 }

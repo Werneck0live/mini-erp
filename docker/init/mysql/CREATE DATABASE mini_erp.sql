@@ -3,8 +3,6 @@ USE erp;
 
 CREATE TABLE IF NOT EXISTS produtos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    codigo VARCHAR(50),
-    EAN13 VARCHAR(13),
     nome VARCHAR(255) NOT NULL,
     preco DECIMAL(10, 2) NOT NULL,
     variacoes TEXT,

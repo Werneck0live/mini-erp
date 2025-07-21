@@ -1,7 +1,3 @@
 <?php
-
-// phpinfo();
-// die();
-
-header('Location: /views/produtos/cadastro.php');
+header('Location: /produto/listar');
 exit;

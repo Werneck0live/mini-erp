@@ -1,15 +1,6 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Produto</title>
-    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
-     
-</head>
-<body>
+<?php include 'views/template.php';?>
     <div class="container">
-        <h1 class="my-4">Cadastro de Produto</h1>
+        <h2 class="my-4">Cadastro de Produto</h2>
         <!-- <form action="../../controllers/ProdutoController.php" method="POST"> -->
         <form action="/produto/salvar" method="POST">
             <div class="mb-3">
@@ -17,12 +8,16 @@
                 <input type="text" class="form-control" id="nome" name="nome" required>
             </div>
             <div class="mb-3">
-                <label for="preco" class="form-label">Preço</label>
-                <input type="number" class="form-control" id="preco" name="preco" step="0.01" required>
+                <label for="preco" class="form-label">Preço </label>
+                <input type="number" class="form-control" placeholder="R$" id="preco" name="preco" step="0.01" min="0" required>
             </div>
             <div class="mb-3">
                 <label for="variacoes" class="form-label">Variações</label>
                 <textarea class="form-control" id="variacoes" name="variacoes"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="estoque" class="form-label">Quantidade em estoque</label>
+                <input type="number" class="form-control" id="estoque" name="estoque" min="0" required>
             </div>
             <button type="submit" class="btn btn-primary">Cadastrar Produto</button>
         </form>

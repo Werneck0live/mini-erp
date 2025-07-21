@@ -1,53 +1,76 @@
 <?php
 
 require_once 'models/Produto.php';
+require_once 'models/Estoque.php';
 
 class ProdutoController {
 
-    public function salvar($id) {
+    public function salvar() {
         $nome = $_POST['nome'];
         $preco = $_POST['preco'];
         $variacoes = $_POST['variacoes'];
+        $quantidade = $_POST['estoque'];
         $produtoModel = new Produto();
-        $produtoModel->criar($nome, $preco, $variacoes);
+        $produtoId = $produtoModel->criar($nome, $preco, $variacoes);
 
-        // require 'views/produtos/cadastro.php';
-        // header("Location: ../views/produtos/lista.php");
-        $this->listar();
+        $estoqueModel = new Estoque();
+        $estoqueModel->adicionarEstoque($produtoId, $quantidade);        
+        
+        header("Location: listar");
+        exit;
     }
 
-    public function carregarProduto($id) {
-        // Instancia o modelo Produto e busca o produto pelo ID
+    public function editar($id) {
+        
         $produtoModel = new Produto();
         $produto = $produtoModel->obterPorId($id);
 
         if(!empty($produto)){
             require 'views/produtos/editar.php';
         } else {
-            $this->listar();
+            header("Location: listar");
         }
     }
 
     public function atualizar($id) {
+        
         $nome = $_POST['nome'];
         $preco = $_POST['preco'];
         $variacoes = $_POST['variacoes'];
-        // $estoque = $_POST['estoque'];
+        $quantidade = $_POST['estoque'];
 
         $produtoModel = new Produto();
-        // $produtoModel->atualizar($id, $nome, $preco, $variacoes, $estoque);
         $produtoModel->atualizar($id, $nome, $preco, $variacoes);
         
-        $this->listar();
-        // header('Location: /produtos/lista');
+        $estoqueModel = new Estoque();
+        $estoqueModel->atualizarEstoque($id, $quantidade);
+        
+        header("Location: ../listar");
+    }
+
+    public function deletar($id) {
+
+        $produtoModel = new Produto();
+        $produtoModel->deletar($id);
+        
+        header("Location: ../listar");
     }
 
     public function listar() {
         $produtoModel = new Produto();
         $produtos = $produtoModel->listar();
 
-        require 'views/produtos/lista.php';
+        require 'views/produtos/listar.php';
     }
 
+    public function comprar($id) {
+        $produtoModel = new Produto();
+        $produto = $produtoModel->obterPorId($id);
 
+        if(!empty($produto)){
+            require 'views/produtos/comprar.php';
+        } else {
+            header("Location: listar");
+        }
+    }
 }
