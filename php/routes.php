@@ -9,13 +9,12 @@ $controllerName = !empty($params[0]) ? ucfirst($params[0]) . 'Controller' : 'Hom
 $method = $params[1] ?? null;
 $id = $params[2] ?? null;
 
+// echo "<pre>";die(var_dump(['controllerName' => $controllerName,'method' => $method,'id' => $id,'controllerPath' => $controllerPath]));
+
 // Switch para tratar o redirecionamento sem a necessidade de passar pelo Controller
 switch ("$controllerName|$method") {
     case 'ProdutoController|cadastrar':
         require 'views/produtos/cadastrar.php';
-        exit();
-    case 'PedidoController|listar':
-        require 'views/pedidos/carrinhoDeCompras.php';
         exit();
     case 'PedidoController|checkout':
         require 'views/pedidos/checkout.php';
@@ -34,10 +33,9 @@ if ((!empty($controllerName) && !empty($method)) || file_exists($controllerPath)
     } else {
         http_response_code(404);
         // Rota padrão
-        require 'views/produtos/listar.php';
-        exit();
+        header("Location: ../produto/listarTodos");
     }
 } else {
     http_response_code(404);
-    header("Location: ../views/produtos/cadastrar.php");
+    header("Location: ../produto/listarTodos");
 }

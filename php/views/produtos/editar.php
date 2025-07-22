@@ -25,7 +25,7 @@
         <button type="submit" class="btn btn-primary">Atualizar Produto</button>
     </form>
 
-    <a href="/produto/listar" class="btn btn-link mt-3">Voltar para a lista</a>
+    <a href="/produto/listarTodos" class="btn btn-link mt-3">Voltar para a lista</a>
 </div>
 
 <script src="../../assets/js/bootstrap.bundle.min.js"></script>

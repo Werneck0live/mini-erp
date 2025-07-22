@@ -26,7 +26,7 @@
 
         <button type="submit" class="btn btn-primary">Adicionar</button>
     </form>
-    <a href="/produto/listar" class="btn btn-link mt-5">Voltar para a lista</a>
+    <a href="/produto/listarTodos" class="btn btn-link mt-5">Voltar para a lista</a>
 
 </div>
 

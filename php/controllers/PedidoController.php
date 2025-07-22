@@ -3,14 +3,13 @@ require_once 'models/Pedido.php';
 require_once 'models/Produto.php';
 require_once 'models/Estoque.php';
 require_once 'models/Cupom.php';
-require_once 'config/bd.php';
 require_once 'config/constants.php';
 require_once 'controllers/MailController.php';
 
 
 class PedidoController {
 
-    public function __construct()
+    public function __construct() 
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -32,13 +31,13 @@ class PedidoController {
 
         if (!$produto) {
              // return ['erro' => 'Produto não encontrado.'];
-            header("Location: ../../produto/listar");
+            header("Location: ../../produto/listarTodos");
         }
         
         if($quantidade > $produto_info['quantidade']){
             //TODO: tratamento de erro
             // return ['erro' => 'Produto não encontrado.'];
-            header("Location: ../../produto/listar");
+            header("Location: ../../produto/listarTodos");
         } else {
 
             if (!isset($_SESSION['carrinho'][$produtoId])) {
@@ -56,7 +55,7 @@ class PedidoController {
             }
         }
 
-        header("Location: ../../produto/listar");
+        header("Location: ../../produto/listarTodos");
     }
 
     public function removerItem($produtoId) {
@@ -76,6 +75,12 @@ class PedidoController {
         header("Location: ../../pedido/checkout");
     }
     
+    public static function listarTodos() {
+        $pedidos = new Pedido();        
+        $pedidos = $pedidos->listarTodos();
+        require 'views/pedidos/relatorio.php';
+    }
+
     public function finalizar(){
         
         if (isset($_POST['quantidade']) && is_array($_POST['quantidade'])) {
@@ -118,6 +123,18 @@ class PedidoController {
             $frete = 20.00;
         }
         
+        if (!empty($_POST['cupom'])) {
+            $cupom = new Cupom();
+            $cupom = $cupom->buscarPorCodigo($_POST['cupom']);
+            if ($cupom && $subtotal >= $cupom['minimo']) {
+                $desconto = $cupom['desconto'];
+            } else {
+                $desconto = 0;
+            }
+        } else {
+            $desconto = 0;
+        }
+
         $total = $subtotal + $frete;
         
         // Criar o pedido
@@ -151,8 +168,8 @@ class PedidoController {
                                         . "\n";
             }
             
-            $tituloEmail = NOME_PROJETO . " - Resumo do Pedido número $pedidoId";
-            $corpoEmail  = "Olá, \n\nSegue as informações do seu pedido número $pedidoId:\n"
+            $tituloEmail = NOME_PROJETO . " - Resumo - Pedido de número $pedidoId";
+            $corpoEmail  = "Olá, \n\nSegue as informações do seu pedido de número $pedidoId:\n"
                           . "\n".DIVISOR_TEXTO_EMAIL
                           . $descricaoItensEmail
                           . DIVISOR_TEXTO_EMAIL."\n\n"
@@ -164,9 +181,22 @@ class PedidoController {
             // Limpando a sessão
             unset($_SESSION['carrinho']);
             
-            header("Location: ../../produto/listar");
+            header("Location: ../../produto/listarTodos");
         }
 
     }
     
+    public function listar(){
+        $pagina = isset($_GET['pagina']) ? max(1, (int)$_GET['pagina']) : 1;
+        $limite = LIMITE_PAGINACAO_LISTA_PEDIDOS;
+        $offset = ($pagina - 1) * $limite;
+
+        $pedido = new Pedido();
+        $total = $pedido->contarTotal();
+        $totalPaginas = ceil($total / $limite);
+        $pedidos = $pedido->listarPaginado($offset, $limite);
+
+        include __DIR__ . '/../views/pedidos/relatorio.php';
+    }
+
 }

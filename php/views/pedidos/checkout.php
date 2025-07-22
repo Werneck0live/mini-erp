@@ -59,7 +59,10 @@ include 'views/template.php';
         ?>
         
     </table>
-
+    <div class="mb-3">
+        <label for="cupom">Cupom de Desconto:</label>
+        <input type="text" name="cupom" id="cupom" class="form-control form-control-sm w-25" placeholder="">
+    </div>
 <?php
     // Cálculo do frete inicial (será sobrescrito pelo JS ao carregar)
     if ($subtotal >= 52 && $subtotal <= 166.59) $frete = 15;
@@ -80,7 +83,7 @@ include 'views/template.php';
 
     <div class="mb-3">
         <label for="cep">CEP:</label>
-        <input type="text" name="cep" id="cep" class="form-control" required>
+        <input type="text" name="cep" id="cep" class="form-control form-control-sm w-25" required>
     </div>
 
     <div class="mb-3">

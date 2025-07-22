@@ -3,7 +3,7 @@
   RewriteBase /
 
   # Redireciona tentativas de acesso às pastas proibidas
-  RewriteRule ^(controllers|models|config|helpers|database)/.*$ /views/produtos/cadastrar.php [R=302,L]
+  RewriteRule ^(controllers|models|config|helpers|database)/.*$ /produto/listar [R=302,L]
 
   # Ignora arquivos e diretórios reais
   RewriteCond %{REQUEST_FILENAME} !-f

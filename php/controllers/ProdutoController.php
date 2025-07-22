@@ -56,9 +56,9 @@ class ProdutoController {
         header("Location: ../listar");
     }
 
-    public function listar() {
+    public function listarTodos() {
         $produtoModel = new Produto();
-        $produtos = $produtoModel->listar();
+        $produtos = $produtoModel->listarTodos();
 
         require 'views/produtos/listar.php';
     }

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS produtos (
     nome VARCHAR(255) NOT NULL,
     preco DECIMAL(10, 2) NOT NULL,
     variacoes TEXT,
+    `status` VARCHAR(50) NOT NULL DEFAULT 'ativo',
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

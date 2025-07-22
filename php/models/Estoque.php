@@ -1,14 +1,8 @@
 <?php
 
-require_once 'config/bd.php';
+require_once 'models/BaseModel.php';
 
-class Estoque {
-    private $pdo;
-
-    public function __construct() {        
-        $pdo = DB::getConnection();
-        $this->pdo = $pdo;
-    }
+class Estoque extends BaseModel{
 
     public function atualizarEstoque($produtoId, $quantidade) {
         $stmt = $this->pdo->prepare("UPDATE estoque SET quantidade = ? WHERE produto_id = ?");
