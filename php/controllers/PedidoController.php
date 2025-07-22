@@ -6,6 +6,7 @@ require_once 'models/Cupom.php';
 require_once 'config/constants.php';
 require_once 'controllers/MailController.php';
 require_once 'config/helpers/frete.php';
+require_once 'config/ErrorHandler.php';
 
 
 class PedidoController {
@@ -27,27 +28,23 @@ class PedidoController {
         $quantidade = $_POST['quantidade'];
         
         $produto = new Produto();
-        $produto_info = $produto->obterPorId($produto_id);
+        $produtoInfo = $produto->obterPorId($produto_id);
 
-
-        if (!$produto) {
-             // return ['erro' => 'Produto não encontrado.'];
-            header("Location: ../../produto/listarTodos");
+        if (empty($produtoInfo)) {
+            ErrorHandler::handleError("Produto não encontrado", "../../produto/listarTodos");
         }
         
-        if($quantidade > $produto_info['quantidade']){
-            //TODO: tratamento de erro
-            // return ['erro' => 'Produto não encontrado.'];
-            header("Location: ../../produto/listarTodos");
+        if($quantidade > $produtoInfo['quantidade']){
+            ErrorHandler::handleError("Saldo em estoque insuficiente", "../../produto/listarTodos");
         } else {
 
             if (!isset($_SESSION['carrinho'][$produtoId])) {
                 $item = [
                     'produto_id' => $produto_id,
-                    'nome' => $produto_info['nome'],
+                    'nome' => $produtoInfo['nome'],
                     'quantidade' => $quantidade,
-                    'preco_unitario' => $produto_info['preco'],
-                    'estoque' => $produto_info['quantidade']
+                    'preco_unitario' => $produtoInfo['preco'],
+                    'estoque' => $produtoInfo['quantidade']
                 ];
                 
                 $_SESSION['carrinho'][$produto_id] = $item;
@@ -57,15 +54,13 @@ class PedidoController {
         }
 
         header("Location: ../../produto/listarTodos");
+        exit();
     }
 
     public function removerItem($produtoId) {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
         
         if (!isset($_SESSION['carrinho'])) {
-            header("Location: /checkout");
+            ErrorHandler::handleError("Erro ao carregar dados do carrinho", "/checkout");
             exit;
         }
 
@@ -74,6 +69,7 @@ class PedidoController {
         });
 
         header("Location: ../../pedido/checkout");
+        exit();
     }
     
     public static function listarTodos() {
@@ -97,8 +93,7 @@ class PedidoController {
 
         } else {
             if(empty($_SESSION['carrinho'])){
-                header("Location: ../../pedido/checkout");
-                exit();
+                ErrorHandler::handleError("Erro ao carregar dados do carrinho", "../../pedido/checkout");
             }
 
             $carrinho = $_SESSION['carrinho'];
@@ -128,61 +123,79 @@ class PedidoController {
         }
 
         $total = ($subtotal + $frete) - $desconto;
-        
-        // Criar o pedido
-        $pedido = new Pedido();
-        $pedidoId = $pedido->criar(
-            $subtotal,
-            $frete,
-            $desconto,
-            $total,
-            $status,
-            $cepCliente,
-            $enderecoCliente,
-            $emailCliente
-        );
 
+        $pedidoModel = new Pedido();
+        $pedidoModel->beginTransaction();
+        try {
+            
+            // Criar o pedido
+            $pedidoId = $pedidoModel->criar(
+                $subtotal,
+                $frete,
+                $desconto,
+                $total,
+                $status,
+                $cepCliente,
+                $enderecoCliente,
+                $emailCliente
+            );
 
-        if((bool)!($pedidoId)){
-            unset($_SESSION['carrinho']);
-            header("Location: ../views/pedidos/resumo.php?id=$pedidoId");
-        } else {
-            // Adicionar os itens ao pedido
-            $descricaoItensEmail = '';
-            foreach ($carrinho as $item) {
-                $pedido->adicionarItem($pedidoId, $item['produto_id'], $item['quantidade'], $item['preco_unitario']);
-                $produtoEstoque = new Estoque();
-                $qtdEstoque = $item['estoque'] - $item['quantidade'];
-                $produtoEstoque->atualizarEstoque($item['produto_id'], $qtdEstoque);
+            if((bool)!($pedidoId)){
+                throw new Exception();
+            } else {
+                $descricaoItensEmail = '';
+                // Adicionar os itens ao pedido
+                foreach ($carrinho as $item) {
+                    if($pedidoModel->adicionarItem($pedidoId, $item['produto_id'], $item['quantidade'], $item['preco_unitario'])){
+
+                        
+                        $produtoEstoque = new Estoque();
+                        $qtdEstoque = $item['estoque'] - $item['quantidade'];
+
+                        $produtoEstoque->atualizarEstoque($item['produto_id'], $qtdEstoque);
+                        
+                        $descricaoItensEmail .= "\nitem: ".$item['nome']." - quantidade: " . $item['quantidade']
+                                                ." - valor unitário: ".$item['preco_unitario'] 
+                                                . " - subtotal: " .number_format($item['quantidade'] * $item['preco_unitario'], 2, ',', '.')
+                                                . "\n";
+                                                
+                    } else {
+                        throw new Exception();
+                    }
+                }
+
+                $pedidoModel->commit();
+
+                $textoDesconto = "";
+                if($desconto > 0 ){
+                    $textoDesconto = "\nDesconto: " . number_format($desconto, 2, ',', '.') . " (".$percentualCupom."%)";
+                }
+
+                $tituloEmail = NOME_PROJETO . " - Resumo - Pedido de número $pedidoId";
+                $corpoEmail  = "Olá, \n\nSegue as informações do seu pedido de número $pedidoId:\n"
+                            . "\n".DIVISOR_TEXTO_EMAIL
+                            . $descricaoItensEmail
+                            . DIVISOR_TEXTO_EMAIL."\n\n"
+                            ."\nSubTotal: " . number_format($subtotal, 2, ',', '.')
+                            ."\nFrete: " . number_format($frete, 2, ',', '.')
+                            . $textoDesconto
+                            ."\n\nTotal: R$" . number_format($total, 2, ',', '.');
+
+                $mail = new MailController();
+                $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
                 
-                $descricaoItensEmail .= "\nitem: ".$item['nome']." - quantidade: " . $item['quantidade']
-                                        ." - valor unitário: ".$item['preco_unitario'] 
-                                        . " - subtotal: " .number_format($item['quantidade'] * $item['preco_unitario'], 2, ',', '.')
-                                        . "\n";
+                // Limpando a sessão
+                unset($_SESSION['carrinho']);
+                
+                header("Location: ../../produto/listarTodos");
+                exit();
             }
-            
-            $textoDesconto = "";
-            if($desconto > 0 ){
-                $textoDesconto = "\nDesconto: " . number_format($desconto, 2, ',', '.') . " (".$percentualCupom."%)";
+        } catch (Exception $e) {
+            if (isset($pedidoModel)) {
+                $pedidoModel->rollBack();
             }
 
-            $tituloEmail = NOME_PROJETO . " - Resumo - Pedido de número $pedidoId";
-            $corpoEmail  = "Olá, \n\nSegue as informações do seu pedido de número $pedidoId:\n"
-                          . "\n".DIVISOR_TEXTO_EMAIL
-                          . $descricaoItensEmail
-                          . DIVISOR_TEXTO_EMAIL."\n\n"
-                          ."\nSubTotal: " . number_format($subtotal, 2, ',', '.')
-                          ."\nFrete: " . number_format($frete, 2, ',', '.')
-                          . $textoDesconto
-                          ."\n\nTotal: R$" . number_format($total, 2, ',', '.');
-
-            $mail = new MailController();
-            $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
-            
-            // Limpando a sessão
-            unset($_SESSION['carrinho']);
-            
-            header("Location: ../../produto/listarTodos");
+            ErrorHandler::handleError("Erro ao finalizar pedido", "../../pedido/checkout");
         }
 
     }

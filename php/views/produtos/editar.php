@@ -28,6 +28,6 @@
     <a href="/produto/listarTodos" class="btn btn-link mt-3">Voltar para a lista</a>
 </div>
 
-<script src="../../assets/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/libs/bootstrap.bundle.min.js"></script>
 </body>
 </html>

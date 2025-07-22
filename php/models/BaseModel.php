@@ -1,13 +1,13 @@
 <?php
 
-require_once 'config/bd.php';
+require_once 'config/databases/mysql_config.php';
 
 class BaseModel {
     protected $pdo;
     protected $table;
     
     public function __construct() {
-        $this->pdo = DB::getConnection();
+        $this->pdo = MySQLDatabase::getConnection();
         $this->table = $this->getTable();
     }
 
@@ -23,6 +23,18 @@ class BaseModel {
         }
 
         return $table;
+    }
+
+    public function beginTransaction() {
+        $this->pdo->beginTransaction();
+    }
+
+    public function commit() {
+        $this->pdo->commit();
+    }
+
+    public function rollBack() {
+        $this->pdo->rollBack();
     }
 
     public function listarTodos() {

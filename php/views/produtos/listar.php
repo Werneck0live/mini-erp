@@ -1,5 +1,5 @@
 <?php include 'views/template.php';?>
-    
+   
 
     <div class="container">
         <h2 class="my-4">Lista de Produtos</h2>
@@ -31,6 +31,5 @@
         </table>
     </div>    
     <a href="/produto/cadastrar" class="btn btn-link mt-3">Cadastrar Produto</a>
-    <script src="../../assets/js/script.js"></script>
 </body>
 </html>

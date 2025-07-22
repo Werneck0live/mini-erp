@@ -21,30 +21,22 @@
 
         <div class="mb-3">
             <label for="quantidade" class="form-label" data-estoque="<?= $item['estoque'] ?>">Quantidade</label>
-            <input type="number" class="form-control" id ="quantidade" name="quantidade" max="<?php echo $produto['quantidade']; ?>" required>
+            <?php if($produto['quantidade'] == 0):?>
+            <input type="text" class="form-control" id ="quantidade" name="quantidade" title="Saldo insuficiente em estoque!" value="Estoque indisponível" readonly>
+            <?php else: ?>
+            <input type="number" class="form-control" id ="quantidade" name="quantidade" max="<?php echo $produto['quantidade']; ?>" value="1" required>
+            <?php endif; ?>
         </div>
-
+        <?php if($produto['quantidade'] > 0):?>
         <button type="submit" class="btn btn-primary">Adicionar</button>
+        <?php endif; ?>
     </form>
     <a href="/produto/listarTodos" class="btn btn-link mt-5">Voltar para a lista</a>
 
 </div>
 
-<script src="../../assets/js/bootstrap.bundle.min.js"></script>
-<script>
-    const inputNumero = document.getElementById('quantidade');
+<script src="../../assets/js/libs/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/modules/produtos/comprar.js"></script>
 
-    inputNumero.addEventListener('input', function () {
-        const estoque = parseInt(document.getElementById('estoque').value);
-        const qtd = parseInt(this.value);
-
-        if (qtd > estoque) {
-            alert('Quantidade solicitada excede o estoque disponível.');
-            this.value = estoque;
-        } else if (qtd < 1) {
-            this.value = 1;
-        }
-    });
-</script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 <?php
 
-class DB {
+class MySQLDatabase {
     private static $pdo = null;
 
     public static function getConnection() {

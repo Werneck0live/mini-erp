@@ -29,7 +29,7 @@
 <?php
 foreach ($cupons as $cupom):
 ?>
-    <li><strong><?= $cupom['codigo'] ?></strong> | <?= $cupom['percentual'] ?>% de desconto até <?= $cupom['validade'] ?></li>
+    <li><strong><?= $cupom['codigo'] ?></strong> | <?= $cupom['percentual'] ?>% de desconto até <?= DateTime::createFromFormat('Y-m-d', $cupom['validade'])->format('d/m/Y'); ?> (valor mínimo: <?= number_format($cupom['valor_minimo'], 2, ',', '.') ?>)</li>
 <?php endforeach; ?>
 </ul>
 </body>

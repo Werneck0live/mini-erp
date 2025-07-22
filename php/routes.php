@@ -34,8 +34,10 @@ if ((!empty($controllerName) && !empty($method)) || file_exists($controllerPath)
         http_response_code(404);
         // Rota padrão
         header("Location: ../produto/listarTodos");
+        exit();
     }
 } else {
     http_response_code(404);
     header("Location: ../produto/listarTodos");
+    exit();
 }

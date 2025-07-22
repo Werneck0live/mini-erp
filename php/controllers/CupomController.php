@@ -13,7 +13,7 @@ class CupomController {
         $validade = $_POST['validade'];
 
         $cupom = new Cupom();
-        $cupom = $cupom->salvar($codigo,$valor_minimo,$percentual_desconto,$validade);
+        $cupom = $cupom->salvar($codigo, $valor_minimo, $percentual_desconto, $validade);
 
         $this->listarTodos();
     }
