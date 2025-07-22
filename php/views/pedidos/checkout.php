@@ -59,20 +59,27 @@ include 'views/template.php';
         ?>
         
     </table>
-    <div class="mb-3">
-        <label for="cupom">Cupom de Desconto:</label>
-        <input type="text" name="cupom" id="cupom" class="form-control form-control-sm w-25" placeholder="">
+    
+    <div id="cupom-container">
+        <label for="codigo-cupom">Cupom:</label>
+        <input name="codigo_cupom"type="text" id="codigo-cupom" placeholder="Digite o cupom">
+        <button type="button" class="btn btn-link btn-sm ms-2" onclick="aplicarCupom()">Aplicar Cupom</button>
     </div>
+
+    
+    <p id="mensagem-cupom" style="color: green;"></p>
 <?php
     // Cálculo do frete inicial (será sobrescrito pelo JS ao carregar)
-    if ($subtotal >= 52 && $subtotal <= 166.59) $frete = 15;
-    elseif ($subtotal > 200) $frete = 0;
-    else $frete = 20;
+    $frete = calcular_frete($subtotal);
     $total = $subtotal + $frete;
     ?>
 
     <p>Subtotal: <span id="subtotal">R$ <?= number_format($subtotal, 2, ',', '.') ?></span></p>
     <p>Frete: <span id="frete">R$ <?= number_format($frete, 2, ',', '.') ?></span></p>
+    <p id="linha-desconto" style="display: none; font-weight: bold;">
+        <span class="text-success me-2">Desconto: R$</span> 
+        <span id="desconto" class="text-success">0,00</span>
+    </p>
     <p><strong>Total: <span id="total">R$ <?= number_format($total, 2, ',', '.') ?></span></strong></p>
 
     <hr>
@@ -132,19 +139,34 @@ include 'views/template.php';
             row.querySelector('.subtotal-item').textContent = 'R$ ' + subtotalItem.toFixed(2).replace('.', ',');
         });
 
+        // Calcula frete baseado no subtotal
         let frete = 20;
         if (subtotal >= 52 && subtotal <= 166.59) frete = 15;
         else if (subtotal > 200) frete = 0;
 
-        const total = subtotal + frete;
+        let total = subtotal + frete;
 
+        // Aplica desconto se houver
+        const descontoElement = document.getElementById('desconto');
+        const descontoLinha = document.getElementById('linha-desconto');
+
+        if (descontoElement && descontoLinha.style.display !== 'none') {
+            let descontoValor = parseFloat(descontoElement.innerText.replace(',', '.'));
+            if (!isNaN(descontoValor) && descontoValor > 0) {
+                total -= descontoValor;
+            }
+        }
+
+        // Atualiza visual
         document.getElementById('subtotal').textContent = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
         document.getElementById('frete').textContent = 'R$ ' + frete.toFixed(2).replace('.', ',');
         document.getElementById('total').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
 
+        // Atualiza inputs ocultos
         document.querySelector('input[name="frete"]').value = frete;
         document.querySelector('input[name="total"]').value = total;
     }
+
 
     // Atualizar ao digitar
     document.querySelectorAll('.qtd-input').forEach(input => {
@@ -167,4 +189,76 @@ include 'views/template.php';
                 });
         }
     });
+</script>
+
+<script>
+    let subtotal = <?= $subtotal ?>;
+    let descontoAplicado = 0;
+    let cupomAtual = null;
+
+    function aplicarCupom() {
+        const input = document.getElementById('codigo-cupom');
+        const codigo = input.value.trim();
+
+        if (!codigo) {
+            document.getElementById('mensagem-cupom').innerText = 'Digite um código.';
+            return;
+        }
+
+        fetch('../cupom/validar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                codigo: codigo,
+                subtotal: subtotal
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            
+            if (!data.sucesso) {
+                document.getElementById('mensagem-cupom').innerText = data.mensagem;
+                return;
+            }
+ 
+            descontoAplicado = data.desconto;
+            const novoTotal = subtotal - descontoAplicado;
+            // Atualiza valores
+            console.log(<?= __LINE__ ?>);
+            document.getElementById('desconto').innerText = descontoAplicado.toFixed(2).replace('.', ',');
+            document.getElementById('linha-desconto').style.display = 'block';
+            document.getElementById('total').innerText = novoTotal.toFixed(2).replace('.', ',');
+            document.getElementById('mensagem-cupom').innerText = 'Cupom aplicado com sucesso!';
+           
+            // Bloqueia input e adiciona botão X
+            input.readOnly = true;
+            if (!document.getElementById('remover-cupom')) {
+                // input.insertAdjacentHTML('afterend', `<button id="remover-cupom" onclick="removerCupom()" style="margin-left: 5px;">X</button>`);
+                input.insertAdjacentHTML('afterend', `<button id="remover-cupom" onclick="removerCupom()" class="btn btn-danger btn-sm ms-2" style="margin-left: 4px;">X</button>`);
+            }
+
+            cupomAtual = codigo;
+        })
+        .catch(() => {
+            document.getElementById('mensagem-cupom').innerText = 'Erro ao validar cupom.';
+        });
+    }
+
+    function removerCupom() {
+        const input = document.getElementById('codigo-cupom');
+        const removerBtn = document.getElementById('remover-cupom');
+
+        descontoAplicado = 0;
+        cupomAtual = null;
+
+        document.getElementById('desconto').innerText = '0,00';
+        document.getElementById('total').innerText = subtotal.toFixed(2).replace('.', ',');
+        document.getElementById('mensagem-cupom').innerText = '';
+        document.getElementById('linha-desconto').style.display = 'none';
+
+        input.readOnly = false;
+        input.value = '';
+
+        if (removerBtn) removerBtn.remove();
+    }
 </script>

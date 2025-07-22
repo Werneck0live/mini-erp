@@ -12,12 +12,26 @@ class BaseModel {
     }
 
     private function getTable() {
-        // Retorna o nome da classe filha em minúsculas e no plural
         $className = get_called_class();
-        return strtolower($className) . 's';
+          // Pluraliza o nome da classe
+
+        // Verifica se o nome da tabela termina com "m" e substitui por "ns"
+        if (substr($className, -1) === 'm') {
+            $table = strtolower(substr($className, 0, -1) . 'ns');
+        } else {
+            $table = strtolower($className) . 's';
+        }
+
+        return $table;
     }
 
     public function listarTodos() {
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table}");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarTodosNaoInativos() {
         $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE `status` <> 'inativo'");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

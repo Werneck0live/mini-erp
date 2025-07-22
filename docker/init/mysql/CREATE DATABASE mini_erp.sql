@@ -20,8 +20,9 @@ CREATE TABLE IF NOT EXISTS estoque (
 CREATE TABLE IF NOT EXISTS cupons (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(50) UNIQUE NOT NULL,
+    `status` VARCHAR(45) NOT NULL DEFAULT 'ativo',
     valor_minimo DECIMAL(10, 2) NOT NULL,
-    desconto DECIMAL(10, 2) NOT NULL,
+    percentual INT(11) NOT NULL DEFAULT 0,
     validade DATE NOT NULL
 );
 
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     subtotal DECIMAL(10, 2) NOT NULL,
     frete DECIMAL(10, 2) NOT NULL,
+    valor_desconto DECIMAL(10,2) NOT NULL DEFAULT 0,
     total DECIMAL(10, 2) NOT NULL,
     cep VARCHAR(10) NOT NULL,
     status VARCHAR(50) NOT NULL,

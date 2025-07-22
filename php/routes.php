@@ -9,20 +9,20 @@ $controllerName = !empty($params[0]) ? ucfirst($params[0]) . 'Controller' : 'Hom
 $method = $params[1] ?? null;
 $id = $params[2] ?? null;
 
-// echo "<pre>";die(var_dump(['controllerName' => $controllerName,'method' => $method,'id' => $id,'controllerPath' => $controllerPath]));
-
 // Switch para tratar o redirecionamento sem a necessidade de passar pelo Controller
 switch ("$controllerName|$method") {
     case 'ProdutoController|cadastrar':
         require 'views/produtos/cadastrar.php';
         exit();
     case 'PedidoController|checkout':
+        include 'config/helpers/frete.php';
         require 'views/pedidos/checkout.php';
         exit();
 }
 
 // Caminho do controller
 $controllerPath = 'controllers/' . $controllerName . '.php';
+// echo "<pre>";die(var_dump(['controllerName' => $controllerName,'method' => $method,'id' => $id,'controllerPath' => $controllerPath]));
 
 if ((!empty($controllerName) && !empty($method)) || file_exists($controllerPath)) {
     require_once $controllerPath;

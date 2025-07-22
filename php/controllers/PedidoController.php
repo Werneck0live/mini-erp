@@ -5,6 +5,7 @@ require_once 'models/Estoque.php';
 require_once 'models/Cupom.php';
 require_once 'config/constants.php';
 require_once 'controllers/MailController.php';
+require_once 'config/helpers/frete.php';
 
 
 class PedidoController {
@@ -77,7 +78,7 @@ class PedidoController {
     
     public static function listarTodos() {
         $pedidos = new Pedido();        
-        $pedidos = $pedidos->listarTodos();
+        $pedidos = $pedidos->listarTodosNaoInativos();
         require 'views/pedidos/relatorio.php';
     }
 
@@ -114,34 +115,26 @@ class PedidoController {
             $subtotal += $item['quantidade'] * $item['preco_unitario'];
         }
         
-        // Calcular o frete
-        if ($subtotal >= VALOR_MAXIMO_PEDIDO_PARA_FRETE) {
-            $frete = 0;
-        } elseif ($subtotal >= VALOR_MINIMO_PEDIDO_PARA_FRETE && $subtotal <= VALOR_MEDIO_PEDIDO_PARA_FRETE) {
-            $frete = 15.00;
-        } else {
-            $frete = 20.00;
-        }
-        
-        if (!empty($_POST['cupom'])) {
+        // helper calculo de frete
+        $frete = calcular_frete($subtotal);
+
+        $desconto = 0;    
+        if (!empty($_POST['codigo_cupom'])) {
             $cupom = new Cupom();
-            $cupom = $cupom->buscarPorCodigo($_POST['cupom']);
-            if ($cupom && $subtotal >= $cupom['minimo']) {
-                $desconto = $cupom['desconto'];
-            } else {
-                $desconto = 0;
+            $percentualCupom = $cupom->buscarPorCodigo($_POST['codigo_cupom'], $subtotal);
+            if ($percentualCupom > 0) {
+                $desconto = $subtotal * ($percentualCupom / 100);
             }
-        } else {
-            $desconto = 0;
         }
 
-        $total = $subtotal + $frete;
+        $total = ($subtotal + $frete) - $desconto;
         
         // Criar o pedido
         $pedido = new Pedido();
         $pedidoId = $pedido->criar(
             $subtotal,
             $frete,
+            $desconto,
             $total,
             $status,
             $cepCliente,
@@ -168,12 +161,20 @@ class PedidoController {
                                         . "\n";
             }
             
+            $textoDesconto = "";
+            if($desconto > 0 ){
+                $textoDesconto = "\nDesconto: " . number_format($desconto, 2, ',', '.') . " (".$percentualCupom."%)";
+            }
+
             $tituloEmail = NOME_PROJETO . " - Resumo - Pedido de número $pedidoId";
             $corpoEmail  = "Olá, \n\nSegue as informações do seu pedido de número $pedidoId:\n"
                           . "\n".DIVISOR_TEXTO_EMAIL
                           . $descricaoItensEmail
                           . DIVISOR_TEXTO_EMAIL."\n\n"
-                          ."\nTotal: R$" . number_format($total, 2, ',', '.');            
+                          ."\nSubTotal: " . number_format($subtotal, 2, ',', '.')
+                          ."\nFrete: " . number_format($frete, 2, ',', '.')
+                          . $textoDesconto
+                          ."\n\nTotal: R$" . number_format($total, 2, ',', '.');
 
             $mail = new MailController();
             $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
@@ -186,7 +187,7 @@ class PedidoController {
 
     }
     
-    public function listar(){
+    public function listar(){ //Paginacao
         $pagina = isset($_GET['pagina']) ? max(1, (int)$_GET['pagina']) : 1;
         $limite = LIMITE_PAGINACAO_LISTA_PEDIDOS;
         $offset = ($pagina - 1) * $limite;

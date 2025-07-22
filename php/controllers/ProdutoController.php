@@ -58,7 +58,7 @@ class ProdutoController {
 
     public function listarTodos() {
         $produtoModel = new Produto();
-        $produtos = $produtoModel->listarTodos();
+        $produtos = $produtoModel->listarTodosNaoInativos();
 
         require 'views/produtos/listar.php';
     }

@@ -6,20 +6,14 @@ class Pedido  extends BaseModel{
 
     const TABLE_PRODUTO = 'produtos';
 
-    public function criar($subtotal, $frete, $total, $status, $cepCliente, $enderecoCliente, $emailCliente) {
-        $stmt = $this->pdo->prepare("INSERT INTO {$this->table} (subtotal, frete, total, `status`, cep, endereco, email_cliente) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        if($stmt->execute([$subtotal, $frete, $total, $status, $cepCliente, $enderecoCliente, $emailCliente])){
+    public function criar($subtotal, $frete, $desconto, $total, $status, $cepCliente, $enderecoCliente, $emailCliente) {
+        $stmt = $this->pdo->prepare("INSERT INTO {$this->table} (subtotal, frete, valor_desconto, total, `status`, cep, endereco, email_cliente) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        if($stmt->execute([$subtotal, $frete, $desconto, $total, $status, $cepCliente, $enderecoCliente, $emailCliente])){
             $ultimoId = $this->pdo->lastInsertId();
             return $ultimoId;            
         } else {
             return 0;
         }
-    }
-
-    public function obterPorId($id) {
-        $stmt = $this->pdo->prepare("SELECT p.*, e.quantidade FROM {TABLE_PRODUTO} p JOIN estoque e ON p.id = e.produto_id WHERE p.id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function adicionarItem($pedido_id, $produto_id, $quantidade, $preco_unitario) {

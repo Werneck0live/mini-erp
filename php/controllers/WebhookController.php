@@ -1,5 +1,6 @@
 <?php
-require_once 'model/Pedido.php';
+require_once 'config/constants.php';
+require_once 'models/Pedido.php';
 require_once 'controllers/MailController.php';
 
 class WebhookController
@@ -19,20 +20,27 @@ class WebhookController
         $status = strtolower(trim($dados['status']));
 
         $pedido = new Pedido();
+        $DadosPedido = $pedido->obterPorId($pedidoId);
 
-        if ($status === 'cancelado') {
-            $pedido->remover($pedidoId);
+        if(!empty($DadosPedido)){
+
+            if ($status === 'cancelado') {
+                $pedido->deletar($pedidoId);
+            } else {
+                $pedido->atualizarStatus($pedidoId, $status);
+            }
+
+            $emailCliente = $DadosPedido['email_cliente'];
+            $tituloEmail = NOME_PROJETO . " - Atualização - Pedido número $pedidoId";
+            $corpoEmail  = "Olá, \n\nSegue o novo status de seu pedido pedido de número $pedidoId:\n"
+                            ."\n'".ucfirst($status)."'";
+
+            $mail = new MailController();
+            $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
+
+            echo json_encode(['sucesso' => true]);
         } else {
-            $pedido->atualizarStatus($pedidoId, $status);
+            echo json_encode(['sucesso' => false, 'message' => 'Pedido não encontrado']);
         }
-
-        $tituloEmail = NOME_PROJETO . " - Atualização - Pedido número $pedidoId";
-        $corpoEmail  = "Olá, \n\nSegue o novo status de seu pedido pedido de número $pedidoId:\n"
-                        .$status;
-
-        $mail = new MailController();
-        $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
-
-        echo json_encode(['sucesso' => true]);
     }
 }
