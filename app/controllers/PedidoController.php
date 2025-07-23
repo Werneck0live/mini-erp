@@ -115,11 +115,18 @@ class PedidoController {
         $frete = calcular_frete($subtotal);
 
         $desconto = 0;    
+        
+        
         if (!empty($_POST['codigo_cupom'])) {
             $cupom = new Cupom();
             $percentualCupom = $cupom->buscarPorCodigo($_POST['codigo_cupom'], $subtotal);
-            if ($percentualCupom > 0) {
-                $desconto = $subtotal * ($percentualCupom / 100);
+         
+            if(!empty($percentualCupom)){
+                $percentualCupom = $percentualCupom['percentual'];
+                
+                if ($percentualCupom > 0) {
+                    $desconto = $subtotal * ($percentualCupom / 100);
+                }
             }
         }
 
@@ -176,8 +183,16 @@ class PedidoController {
                             . $textoDesconto
                             ."\n\nTotal: R$" . number_format($total, 2, ',', '.');
 
-                $mail = new MailController();
-                $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
+                try {
+                    $mail = new MailController();
+                    $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
+                } catch (Exception $e) {
+                    $mensagem = "Pedido criado. Houve problema ao enviar"
+                                    ." e-mail do pedido para o usuário: ".$e->getMessage()
+                                    .". Revise as configurações do seu servidor SMTP";
+
+                    ErrorHandler::handleError($mensagem, "../../produto/listarTodos");
+                }
                 
                 // Limpando a sessão
                 unset($_SESSION['carrinho']);

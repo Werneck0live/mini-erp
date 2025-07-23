@@ -24,10 +24,16 @@ class WebhookController
 
         if(!empty($DadosPedido)){
 
+            $erroAtualizarStatus = false;
             if ($status === 'cancelado' || $status === 'inativo') {
-                $pedido->deletar($pedidoId);
+                $erroAtualizarStatus = $pedido->deletar($pedidoId) ? false : true;
             } else {
-                $pedido->atualizarStatus($pedidoId, $status);
+                $erroAtualizarStatus = $pedido->atualizarStatus($pedidoId, $status) ? false : true;
+            }
+
+            if($erroAtualizarStatus){
+                echo json_encode(["sucesso" => false, 'message' => "Erro ao atualizar pedido"]);
+                exit();
             }
 
             $emailCliente = $DadosPedido['email_cliente'];
@@ -35,8 +41,13 @@ class WebhookController
             $corpoEmail  = "Olá, \n\nSegue o novo status de seu pedido pedido de número $pedidoId:\n"
                             ."\n'".ucfirst($status)."'";
 
-            $mail = new MailController();
-            $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
+            try {
+                $mail = new MailController();
+                $mail->sendMail($emailCliente, $tituloEmail, $corpoEmail);
+            } catch (Exception $e) {
+                echo json_encode(['sucesso' => false, 'message' => 'Aviso: Pedido atualizado. Houve problema no envio de email: ' . $e->getMessage().". Revise as configurações do seu servidor SMTP"]);
+                exit();
+            }
 
             echo json_encode(['sucesso' => true]);
         } else {

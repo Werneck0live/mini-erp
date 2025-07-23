@@ -26,13 +26,23 @@ class CupomController {
 
         $cupomModel = new Cupom();
         $cupom = $cupomModel->buscarPorCodigo($codigo, $subtotal);
-
+        
         if (!$cupom) {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Cupom não encontrado.']);
             exit;
         }
 
-        $desconto = $subtotal * ($cupom / 100);
+        // echo "<pre>";die(var_dump([
+        //     'subtotal' => $subtotal,
+        //     'cupom' => $cupom['valor_minimo']
+        // ]));
+
+        if ($subtotal < $cupom['valor_minimo']) {
+            echo json_encode(['sucesso' => false, 'mensagem' => "Valor subtotal insuficiente. \nValor mínimo: R$".$cupom['valor_minimo']]);
+            exit;
+        }        
+
+        $desconto = $subtotal * ($cupom['percentual'] / 100);
 
         echo json_encode([
             'sucesso' => true,

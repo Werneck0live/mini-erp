@@ -24,10 +24,13 @@ class MailController {
             $mail->CharSet    = $this->config['smtp_charset'];
             $mail->Host       = $this->config['smtp_host'];
             $mail->Port       = $this->config['smtp_port'];
-            $mail->SMTPAuth   = !empty($this->config['smtp_auth']);
+            $mail->SMTPAuth =  !empty($this->config['smtp_auth']);
             $mail->Username   = $this->config['smtp_username'];
             $mail->Password   = $this->config['smtp_password'];
-            $mail->SMTPSecure = $this->config['smtp_secure'];
+            
+            if (!empty($this->config['smtp_secure'])) {
+                $mail->SMTPSecure = $this->config['smtp_secure'];
+            }
 
             $mail->setFrom($this->config['from_email'], $this->config['from_name']);
             $mail->addAddress($contaDestino);
@@ -36,7 +39,7 @@ class MailController {
 
             $mail->send();
         } catch (Exception $e) {
-            echo 'Erro ao enviar e-mail: ', $mail->ErrorInfo;
+            throw new Exception($mail->ErrorInfo);
         }
     }
 }

@@ -6,14 +6,13 @@ class Cupom extends BaseModel{
     
     public function buscarPorCodigo($codigo, $subtotal) {
         $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE codigo = ? AND validade >= CURDATE()");
-        $stmt->execute([$codigo]);
-        $cupom = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($cupom && $subtotal >= $cupom['valor_minimo']) {
-            return $cupom['percentual'];
+        
+        if($stmt->execute([$codigo])){
+            $cupom = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $cupom;
         }
 
-        return 0;
+        return null;
     }
 
     public function salvar($codigo,$valor_minimo,$percentualDesconto,$validade){
