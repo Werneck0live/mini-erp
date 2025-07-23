@@ -36,7 +36,7 @@ include '../views/template.php';
             <tr class="item-linha"
                 data-preco="<?= $item['preco_unitario'] ?>"
                 data-estoque="<?= $item['estoque'] ?>">
-                <td><?= $item['nome'] ?></td>
+                <td><?= $item['nome'], " ", $item['descricao'] ?></td>
                 <td>R$ <?= number_format($item['preco_unitario'], 2, ',', '.') ?></td>
                 <td>
                     <input 

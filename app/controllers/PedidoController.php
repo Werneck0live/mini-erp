@@ -22,37 +22,45 @@ class PedidoController {
         }
     }
 
-    public function adicionar($produtoId) {
+    public function adicionar() {
 
-        $produto_id = $produtoId;
-        $quantidade = $_POST['quantidade'];
+        foreach ($_POST['variacoes'] as $variacao) {
         
-        $produto = new Produto();
-        $produtoInfo = $produto->obterPorId($produto_id);
-
-        if (empty($produtoInfo)) {
-            ErrorHandler::handleError("Produto não encontrado", "../../produto/listarTodos");
-        }
+            if(empty($variacao['quantidade'])){
+                continue;
+            }
         
-        if($quantidade > $produtoInfo['quantidade']){
-            ErrorHandler::handleError("Saldo em estoque insuficiente", "../../produto/listarTodos");
-        } else {
+            $produtoId = $variacao['id'];
+            $quantidade = $variacao['quantidade'];
+            
+            $produto = new Produto();
+            $produtoInfo = $produto->obterDadosVariacaoPorId($produtoId);
 
-            if (!isset($_SESSION['carrinho'][$produtoId])) {
-                $item = [
-                    'produto_id' => $produto_id,
-                    'nome' => $produtoInfo['nome'],
-                    'quantidade' => $quantidade,
-                    'preco_unitario' => $produtoInfo['preco'],
-                    'estoque' => $produtoInfo['quantidade']
-                ];
-                
-                $_SESSION['carrinho'][$produto_id] = $item;
+            if (empty($produtoInfo)) {
+                ErrorHandler::handleError("Produto não encontrado", "../../produto/listarTodos");
+            }
+            
+            if($quantidade > $produtoInfo['quantidade']){
+                ErrorHandler::handleError("Saldo em estoque insuficiente", "../../produto/listarTodos");
             } else {
-                $_SESSION['carrinho'][$produtoId]['quantidade'] += (int)$quantidade;
+
+                if (!isset($_SESSION['carrinho'][$produtoId])) {
+                    $item = [
+                        'produto_id' => $produtoId,
+                        'nome' => $produtoInfo['nome'],
+                        'descricao' => $produtoInfo['descricao'],
+                        'quantidade' => $quantidade,
+                        'preco_unitario' => $produtoInfo['preco'],
+                        'estoque' => $produtoInfo['quantidade']
+                    ];
+                    
+                    $_SESSION['carrinho'][$produtoId] = $item;
+                } else {
+                    $_SESSION['carrinho'][$produtoId]['quantidade'] += (int)$quantidade;
+                }
             }
         }
-
+        
         header("Location: ../../produto/listarTodos");
         exit();
     }
@@ -146,6 +154,7 @@ class PedidoController {
                 $descricaoItensEmail = '';
                 // Adicionar os itens ao pedido
                 foreach ($carrinho as $item) {
+
                     if($pedidoModel->adicionarItem($pedidoId, $item['produto_id'], $item['quantidade'], $item['preco_unitario'])){
 
                         
@@ -154,7 +163,7 @@ class PedidoController {
 
                         $produtoEstoque->atualizarEstoque($item['produto_id'], $qtdEstoque);
                         
-                        $descricaoItensEmail .= "\nitem: ".$item['nome']." - quantidade: " . $item['quantidade']
+                        $descricaoItensEmail .= "\nitem: ".$item['nome']." ".$item['descricao']." - quantidade: " . $item['quantidade']
                                                 ." - valor unitário: ".$item['preco_unitario'] 
                                                 . " - subtotal: " .number_format($item['quantidade'] * $item['preco_unitario'], 2, ',', '.')
                                                 . "\n";

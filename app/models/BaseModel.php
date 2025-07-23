@@ -8,7 +8,10 @@ class BaseModel {
     
     public function __construct() {
         $this->pdo = MySQLDatabase::getConnection();
-        $this->table = $this->getTable();
+        
+        if (empty($this->table)) {
+            $this->table = $this->getTable();
+        }
     }
 
     private function getTable() {

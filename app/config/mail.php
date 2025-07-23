@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/env_loader.php';
+loadEnv(__DIR__ . '/../.env');
+
 return [
     'smtp_host' => getenv('SMTP_HOST') ?: 'sandbox.smtp.mailtrap.io',
     'smtp_port' => getenv('SMTP_PORT') ?: 587,
