@@ -8,7 +8,6 @@ require_once '../controllers/MailController.php';
 require_once '../config/helpers/frete.php';
 require_once '../config/ErrorHandler.php';
 
-
 class PedidoController {
 
     public function __construct() 
@@ -80,12 +79,6 @@ class PedidoController {
         exit();
     }
     
-    public static function listarTodos() {
-        $pedidos = new Pedido();        
-        $pedidos = $pedidos->listarTodosNaoInativos();
-        require '../views/pedidos/relatorio.php';
-    }
-
     public function finalizar(){
         
         if (isset($_POST['quantidade']) && is_array($_POST['quantidade'])) {
@@ -154,23 +147,16 @@ class PedidoController {
                 $descricaoItensEmail = '';
                 // Adicionar os itens ao pedido
                 foreach ($carrinho as $item) {
-
-                    if($pedidoModel->adicionarItem($pedidoId, $item['produto_id'], $item['quantidade'], $item['preco_unitario'])){
-
                         
-                        $produtoEstoque = new Estoque();
-                        $qtdEstoque = $item['estoque'] - $item['quantidade'];
+                    $produtoEstoque = new Estoque();
+                    $qtdEstoque = $item['estoque'] - $item['quantidade'];
 
-                        $produtoEstoque->atualizarEstoque($item['produto_id'], $qtdEstoque);
-                        
-                        $descricaoItensEmail .= "\nitem: ".$item['nome']." ".$item['descricao']." - quantidade: " . $item['quantidade']
-                                                ." - valor unitário: ".$item['preco_unitario'] 
-                                                . " - subtotal: " .number_format($item['quantidade'] * $item['preco_unitario'], 2, ',', '.')
-                                                . "\n";
-                                                
-                    } else {
-                        throw new Exception();
-                    }
+                    $produtoEstoque->atualizarEstoque($item['produto_id'], $qtdEstoque);
+                    
+                    $descricaoItensEmail .= "\nitem: ".$item['nome']." ".$item['descricao']." - quantidade: " . $item['quantidade']
+                                            ." - valor unitário: ".$item['preco_unitario'] 
+                                            . " - subtotal: " .number_format($item['quantidade'] * $item['preco_unitario'], 2, ',', '.')
+                                            . "\n";
                 }
 
                 $pedidoModel->commit();

@@ -24,7 +24,7 @@ class WebhookController
 
         if(!empty($DadosPedido)){
 
-            if ($status === 'cancelado') {
+            if ($status === 'cancelado' || $status === 'inativo') {
                 $pedido->deletar($pedidoId);
             } else {
                 $pedido->atualizarStatus($pedidoId, $status);

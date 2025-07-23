@@ -2,27 +2,31 @@ services:
   php-environment:
     container_name: php-apache
     build:
-      context: ./  # Certifique-se de que está apontando para o diretório correto
-      dockerfile: ./Dockerfile  # Caminho do seu Dockerfile
+      context: ./  
+      dockerfile: ./Dockerfile
+    depends_on:
+      - mysql
     volumes:
-      - ../app:/var/www/html  # Se você estiver usando o volume para vincular a pasta app ao contêiner
+      - ../app:/var/www/html
     ports:
       - 8000:80
   mysql: 
-    container_name: "mysql"
+    container_name: ${MYSQL_HOST}
     image: mysql:5.7
     restart: always
     environment:
-      MYSQL_DATABASE: 'erp'
-      MYSQL_USER: 'localdocker'
-      MYSQL_PASSWORD: 'localdocker'
-      MYSQL_ROOT_PASSWORD: 'root'
+      TZ: ${MYSQL_TIMEZONE}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATA_DIR: '/var/lib/mysql' 
       MYSQL_LOG_DIR: '/var/log/mysql'
     ports:
       - '33100:3306'
     volumes:
       - ../docker/init/mysql/:/docker-entrypoint-initdb.d
+    command: --default-time-zone='-03:00'  
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s

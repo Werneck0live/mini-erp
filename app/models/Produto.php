@@ -37,7 +37,7 @@ class Produto  extends BaseModel{
 
     public function obterDadosVariacaoPorId($id) {
         $stmt = $this->pdo->prepare("SELECT 
-                                        p.id, p.nome, p.descricao, e.quantidade, (SELECT preco FROM produtos WHERE id = p.parent_id) as preco
+                                        p.id, p.nome, p.descricao, e.quantidade, (SELECT preco FROM produtos WHERE id = p.id_produto_pai) as preco
 	                                    FROM erp.produtos p 
                                         JOIN estoque e ON p.id = e.produto_id 
                                         WHERE p.id = ?");
@@ -46,20 +46,20 @@ class Produto  extends BaseModel{
     }
 
     public function obterGrupoPorParentId($id) {
-        $stmt = $this->pdo->prepare("SELECT p.*, e.quantidade FROM {$this->table} p LEFT JOIN estoque e ON p.id = e.produto_id WHERE (p.id = ? OR parent_id = ?) AND status = 'ativo'");
+        $stmt = $this->pdo->prepare("SELECT p.*, e.quantidade FROM {$this->table} p LEFT JOIN estoque e ON p.id = e.produto_id WHERE (p.id = ? OR id_produto_pai = ?) AND status = 'ativo'");
         $stmt->execute([$id, $id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     
     public function listarVariacoes($parentId) {
-        $stmt = $this->pdo->prepare("SELECT p.*, e.quantidade FROM {$this->table} p LEFT JOIN estoque e ON p.id = e.produto_id WHERE parent_id = ?");
+        $stmt = $this->pdo->prepare("SELECT p.*, e.quantidade FROM {$this->table} p LEFT JOIN estoque e ON p.id = e.produto_id WHERE id_produto_pai = ?");
         $stmt->execute([$parentId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function criarvariacao($parentId, $nome, $descricao) {
-        $stmt = $this->pdo->prepare("INSERT INTO {$this->table} (nome, descricao, parent_id) VALUES (?, ?, ?)");
+        $stmt = $this->pdo->prepare("INSERT INTO {$this->table} (nome, descricao, id_produto_pai) VALUES (?, ?, ?)");
         if ($stmt->execute([$nome, $descricao, $parentId])) {
             return $this->pdo->lastInsertId();
         } else {
@@ -68,12 +68,12 @@ class Produto  extends BaseModel{
     }
 
     public function listarTodos() {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE `status` = 'ativo' AND parent_id IS NULL");
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE `status` = 'ativo' AND id_produto_pai IS NULL");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function deletarGrupo($id) {
-        return $this->pdo->prepare("UPDATE {$this->table} SET `status` = 'inativo' WHERE id = ? OR parent_id = ?")->execute([$id, $id]);
+        return $this->pdo->prepare("UPDATE {$this->table} SET `status` = 'inativo' WHERE id = ? OR id_produto_pai = ?")->execute([$id, $id]);
     }
 }

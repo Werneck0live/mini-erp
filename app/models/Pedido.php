@@ -16,17 +16,6 @@ class Pedido  extends BaseModel{
         }
     }
 
-    public function adicionarItem($pedido_id, $produto_id, $quantidade, $preco_unitario) {
-        $stmt = $this->pdo->prepare("INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([$pedido_id, $produto_id, $quantidade, $preco_unitario]);
-    }
-
-    public function listarTodos()
-    {
-        $stmt = $this->pdo->query("SELECT * FROM {$this->table} ORDER BY data_criacao DESC");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     public function atualizarStatus($id, $status)
     {
         $stmt = $this->pdo->prepare("UPDATE {$this->table} SET status = ? WHERE id = ?");
@@ -42,7 +31,7 @@ class Pedido  extends BaseModel{
 
     public function listarPaginado($offset, $limite)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} ORDER BY id DESC LIMIT :offset, :limite");
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE `status` <> 'inativo' ORDER BY id DESC LIMIT :offset, :limite");
         $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
         $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
         $stmt->execute();

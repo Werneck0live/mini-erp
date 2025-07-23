@@ -1,3 +1,0 @@
-ALTER USER 'localdocker'@'%' IDENTIFIED BY 'localdocker';
-GRANT ALL PRIVILEGES ON *.* TO 'localdocker'@'%' WITH GRANT OPTION;
-FLUSH PRIVILEGES;

@@ -7,8 +7,6 @@ require_once '../libraries/PHPMailer/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// require '../vendor/autoload.php';
-
 class MailController {
 
     private $config;
@@ -26,7 +24,7 @@ class MailController {
             $mail->CharSet    = $this->config['smtp_charset'];
             $mail->Host       = $this->config['smtp_host'];
             $mail->Port       = $this->config['smtp_port'];
-            $mail->SMTPAuth   = !empty($this->config['smtp_username']);
+            $mail->SMTPAuth   = !empty($this->config['smtp_auth']);
             $mail->Username   = $this->config['smtp_username'];
             $mail->Password   = $this->config['smtp_password'];
             $mail->SMTPSecure = $this->config['smtp_secure'];

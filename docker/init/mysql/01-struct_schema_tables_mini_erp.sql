@@ -4,18 +4,19 @@ USE erp;
 CREATE TABLE IF NOT EXISTS produtos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
-    preco DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    preco DECIMAL(10, 2) DEFAULT 0.00,
     descricao TEXT,
     `status` VARCHAR(50) NOT NULL DEFAULT 'ativo',
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    parent_id INT NULL,
-    FOREIGN KEY (parent_id) REFERENCES produtos(id) ON DELETE CASCADE
+    id_produto_pai INT NULL,
+    FOREIGN KEY (id_produto_pai) REFERENCES produtos(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS estoque (
     id INT AUTO_INCREMENT PRIMARY KEY,
     produto_id INT NOT NULL,
     quantidade INT NOT NULL,
+    UNIQUE(produto_id),
     FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
 );
 
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS cupons (
     codigo VARCHAR(50) UNIQUE NOT NULL,
     `status` VARCHAR(45) NOT NULL DEFAULT 'ativo',
     valor_minimo DECIMAL(10, 2) NOT NULL,
-    percentual INT(11) NOT NULL DEFAULT 0,
+    percentual INT NOT NULL DEFAULT 0,
     validade DATE NOT NULL
 );
 
@@ -39,17 +40,5 @@ CREATE TABLE IF NOT EXISTS pedidos (
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     endereco TEXT,
     email_cliente VARCHAR(100),
-    data_pedido DATETIME DEFAULT CURRENT_TIMESTAMP
+    data_modificacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-CREATE TABLE IF NOT EXISTS itens_pedido (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    pedido_id INT NOT NULL,
-    produto_id INT NOT NULL,
-    quantidade INT NOT NULL,
-    preco_unitario DECIMAL(10, 2) NOT NULL,
-    FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
-    FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
-);
-
-

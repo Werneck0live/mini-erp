@@ -1,1 +1,1 @@
-sudo docker compose -f docker/docker-compose.yml up -d
+sudo docker compose -f docker/docker-compose.yml --env-file app/.env up -d

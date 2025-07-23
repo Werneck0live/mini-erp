@@ -69,7 +69,7 @@ class ProdutoController {
             $produto = [];
 
             foreach ($grupoProduto as $p) {
-                if(is_null($p['parent_id'])){
+                if(is_null($p['id_produto_pai'])){
                     $produto['id'] = $p['id'];
                     $produto['nome'] = $p['nome'];
                     $produto['preco'] = $p['preco'];
@@ -87,8 +87,7 @@ class ProdutoController {
         }
     }
 
-    public function atualizar($id)
-    {
+    public function atualizar($id) {
         $nome = $_POST['nome'];
         $preco = $_POST['preco'];
         $variacoesInput = $_POST['variacoes'] ?? [];
@@ -96,6 +95,10 @@ class ProdutoController {
         try {
             $produtoModel = new Produto();
             $produtoModel->beginTransaction();
+
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
 
             // Atualiza produto pai
             if (!$produtoModel->atualizar($id, $nome, $preco)) {
@@ -108,7 +111,6 @@ class ProdutoController {
             // Mapeia as IDs das antigas
             $idsAntigos = array_column($variacoesAntigas, 'id');
 
-            // IDs que vieram no POST (editadas)
             $idsAtuais = [];
 
             $estoqueModel = new Estoque();
@@ -125,6 +127,25 @@ class ProdutoController {
                     if(!$estoqueModel->atualizarEstoque($variacaoId, $variacao['estoque'])) {
                         throw new Exception(self::ERROR_CADASTRAR_PRODUTO);
                     }
+                
+                    // Antes de remover, verificar se o produto está na sessão(checkout) e atualiza-lo
+                    if(isset($_SESSION['carrinho'][$variacaoId])){
+                        $quantidadePedido = $_SESSION['carrinho'][$variacaoId]['quantidade'];
+                        
+                        unset($_SESSION['carrinho'][$variacaoId]);
+
+                        $arrayProduto = [
+                            "produto_id"=> $variacaoId,
+                            "nome"=> $nome,
+                            "descricao"=> $variacao['descricao'],
+                            "quantidade"=> $quantidadePedido,
+                            "preco_unitario"=> $preco,
+                            "estoque"=>  $variacao['estoque'],
+                        ];
+
+                        $_SESSION['carrinho'][$variacaoId] = $arrayProduto;
+                    }
+                    
                 } else {
                     // Criar produto-filho (variação)
                     $idVariação = $produtoModel->criarvariacao($id, $nome, $variacao['descricao']);
@@ -138,7 +159,13 @@ class ProdutoController {
             // Verifica variações removidas (estavam no banco, mas não vieram no POST)
             $idsParaRemover = array_diff($idsAntigos, $idsAtuais);
 
-            foreach ($idsParaRemover as $removerId) {                
+            foreach ($idsParaRemover as $removerId) {
+                
+                // Antes de remover, verificar se o produto está na sessão(checkout) e remove-lo
+                if(isset($_SESSION['carrinho'][$removerId])){
+                    unset($_SESSION['carrinho'][$removerId]);
+                }
+                
                 if (!$produtoModel->deletar($removerId) || !$estoqueModel->deletar($removerId)) {
                     throw new Exception(self::ERROR_CADASTRAR_PRODUTO);
                 }
@@ -156,14 +183,40 @@ class ProdutoController {
         }
     }
 
-
     public function deletar($id) {
         $produtoModel = new Produto();
-        if ($produtoModel->deletarGrupo($id)) {
-            header("Location: ../listarTodos");
-            exit();
-        } else {
-            ErrorHandler::handleError("Falha ao deletar o produto", "../../produto/listarTodos");
+        $produtoModel->beginTransaction();
+        
+        try {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+
+            // Antes de remover, verificar se o produto está na sessão(checkout) e remove-lo
+            $grupoProduto = $produtoModel->obterGrupoPorParentId($id);
+
+            foreach ($grupoProduto as $produto) {
+                if(isset($_SESSION['carrinho'][$produto['id']])){
+                    unset($_SESSION['carrinho'][$produto['id']]);
+                }                
+            }
+
+            if ($produtoModel->deletarGrupo($id)) {
+                
+                $produtoModel->commit();
+
+                header("Location: ../listarTodos");
+                exit();
+            } else {
+                ErrorHandler::handleError("Falha ao deletar o produto", "../../produto/listarTodos");
+            }
+        } catch (Exception $e) {
+
+            if (isset($produtoModel)) {
+                $produtoModel->rollBack();
+            }
+
+            ErrorHandler::handleError("Falha ao deletar o produto", "../../pedido/checkout");
         }
     }
 
@@ -182,7 +235,7 @@ class ProdutoController {
             $produto = [];
 
             foreach ($grupoProduto as $p) {
-                if(is_null($p['parent_id'])){
+                if(is_null($p['id_produto_pai'])){
                     $produto['id'] = $p['id'];
                     $produto['nome'] = $p['nome'];
                     $produto['preco'] = $p['preco'];
