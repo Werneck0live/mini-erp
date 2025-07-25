@@ -82,7 +82,7 @@ sudo docker compose -f docker/docker-compose.yml down
 
 
 
-3. Conforme está no docker-compose.yml, o sistema está exposto na porta `"8000"`. Por isso, para acessá-lo, basta acessar a url *http://localhost:8000/* .
+3. Conforme está no docker-compose.yml, o sistema está exposto na porta `"8000"`. Por isso, para acessá-lo, basta utilizar a url *http://localhost:8000/* .
 
 #### Acesso ao Banco de Dados via Docker
 

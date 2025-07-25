@@ -1,5 +1,6 @@
 <?php
 require_once '../config/constants.php';
+require_once '../validators/WebhookValidator.php';
 require_once '../models/Pedido.php';
 require_once '../controllers/MailController.php';
 
@@ -9,6 +10,16 @@ class WebhookController
     {
         $json = file_get_contents('php://input');
         $dados = json_decode($json, true);
+
+        $erro = WebhookValidator::validarPayload($dados);
+        if ($erro) {
+            http_response_code(400);
+            echo json_encode([
+                'sucesso' => false,
+                'message' => $erro['erro']
+            ]);
+            exit;
+        }
 
         if (!isset($dados['id']) || !isset($dados['status'])) {
             http_response_code(400);
@@ -32,6 +43,7 @@ class WebhookController
             }
 
             if($erroAtualizarStatus){
+                http_response_code(400);
                 echo json_encode(["sucesso" => false, 'message' => "Erro ao atualizar pedido"]);
                 exit();
             }
@@ -51,6 +63,7 @@ class WebhookController
 
             echo json_encode(['sucesso' => true]);
         } else {
+            http_response_code(400);
             echo json_encode(['sucesso' => false, 'message' => 'Pedido não encontrado']);
         }
     }

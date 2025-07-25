@@ -2,10 +2,10 @@ services:
   php-environment:
     container_name: php-apache
     build:
-      context: ./  # Certifique-se de que está apontando para o diretório correto
-      dockerfile: ./Dockerfile  # Caminho do seu Dockerfile
+      context: ./
+      dockerfile: ./Dockerfile
     volumes:
-      - ../app:/var/www/html  # Se você estiver usando o volume para vincular a pasta app ao contêiner
+      - ../app:/var/www/html
     ports:
       - 8000:80
   mysql: 
@@ -19,6 +19,7 @@ services:
       MYSQL_ROOT_PASSWORD: 'root'
       MYSQL_DATA_DIR: '/var/lib/mysql' 
       MYSQL_LOG_DIR: '/var/log/mysql'
+      TZ: 'America/Sao_Paulo'
     ports:
       - '33100:3306'
     volumes:

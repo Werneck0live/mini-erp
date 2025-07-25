@@ -1,6 +1,7 @@
 <?php
 
 require_once '../models/Produto.php';
+require_once '../validators/ProdutoValidator.php';
 require_once '../models/Estoque.php';
 require_once '../config/ErrorHandler.php';
 
@@ -14,12 +15,11 @@ class ProdutoController {
         $preco = $_POST['preco'];
         $variacoes = $_POST['variacoes'] ?? [];
 
-        if (empty($variacoes)) {
-            ErrorHandler::handleError(self::ERROR_CADASTRAR_PRODUTO, "../../produto/listarTodos");
-            return;
-        }
-
+        
         try {
+            
+            ProdutoValidator::validarSalvar($nome, $preco, $variacoes);
+
             $produtoModel = new Produto();
             $produtoModel->beginTransaction();
 
@@ -34,7 +34,6 @@ class ProdutoController {
             foreach ($variacoes as $v) {
                 $descricao = trim($v['descricao']);
                 $estoque = intval($v['estoque'] ?? 0);
-
 
                 // Criar produto-filho (variação)
                 // die(var_dump([
@@ -62,6 +61,11 @@ class ProdutoController {
     }
 
     public function editar($id) {
+        
+        if (empty($id)){
+            ErrorHandler::handleError("Erro ao carregar o produto", "../../produto/listarTodos");
+        }
+
         $produtoModel = new Produto();
         $grupoProduto = $produtoModel->obterGrupoPorParentId($id);
 
@@ -93,6 +97,8 @@ class ProdutoController {
         $variacoesInput = $_POST['variacoes'] ?? [];
 
         try {
+            ProdutoValidator::validarAtualizar($nome, $preco, $variacoesInput);
+
             $produtoModel = new Produto();
             $produtoModel->beginTransaction();
 
@@ -184,6 +190,11 @@ class ProdutoController {
     }
 
     public function deletar($id) {
+
+        if (empty($id)){
+            ErrorHandler::handleError("Erro ao carregar o produto", "../../produto/listarTodos");
+        }
+
         $produtoModel = new Produto();
         $produtoModel->beginTransaction();
         
