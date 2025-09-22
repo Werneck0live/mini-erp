@@ -1,5 +1,28 @@
 ## Sistema de Controle de Pedidos, Produtos, Estoque e Cupons
 
+<!-- SUMÁRIO -->
+## Sumário
+- [Descrição do Projeto](#sistema-de-controle-de-pedidos-produtos-estoque-e-cupons)
+- [Observações: Requisitos Técnicos](#observações-requisitos-técnicos)
+  - [Dependência de Apache com .htaccess](#1-dependência-de-apache-com-htaccess)
+  - [Utilização do .env](#2-utilização-do-env)
+- [Inicializar o ambiente](#inicializar-o-ambiente)
+  - [Utilização COM Docker](#utilização-com-docker)
+  - [Acesso ao Banco de Dados via Docker](#acesso-ao-banco-de-dados-via-docker)
+  - [Utilização SEM Docker](#utilização-sem-docker)
+- [Outras informações](#outras-informações)
+  - [Convenções de Código](#convenções-de-código)
+  - [Envio de E-mails](#envio-de-e-mails)
+  - [Configuração com Gmail](#configuração-com-gmail)
+  - [Outra alternativa para testes de envio de e-mail: MailTrap](#outra-alternativa-para-testes-de-envio-de-e-mail-mailtrap)
+  - [Proteções de Sessão e Checkout](#proteções-de-sessão-e-checkout)
+  - [Webhook de Atualização de Pedido](#webhook-de-atualização-de-pedido)
+- [Revisão](#revisão)
+
+---
+
+## Sistema de Controle de Pedidos, Produtos, Estoque e Cupons
+
 Este projeto consiste em um mini ERP desenvolvido para fins demonstrativos, com foco na apresentação de funcionalidades essenciais para sistemas de gestão e e-commerce. Entre os recursos implementados, destacam-se: cadastro de produtos com variações, controle de estoque, carrinho de compras com gerenciamento de sessão, aplicação de cupons de desconto, cálculo automatizado de frete, integração via webhooks e envio de e-mails transacionais.
 
 ---
