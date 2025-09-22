@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Evita reescrever o roteador
+  RewriteCond %{REQUEST_URI} !^/config/routes\.php$
+
+  # Redireciona tentativas de acesso às pastas proibidas
+  RewriteRule ^(controllers|models|config|helpers|database)/.*$ /produto/listar [R=302,L]
+
+  # Ignora arquivos e diretórios reais
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Redireciona tudo para o roteador
+  RewriteRule ^(.+)$ config/routes.php?url=$1 [QSA,L]
+</IfModule>

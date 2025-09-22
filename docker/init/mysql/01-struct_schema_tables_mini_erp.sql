@@ -1,0 +1,44 @@
+CREATE DATABASE IF NOT EXISTS erp;
+USE erp;
+
+CREATE TABLE IF NOT EXISTS produtos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    preco DECIMAL(10, 2) DEFAULT 0.00,
+    descricao TEXT,
+    `status` VARCHAR(50) NOT NULL DEFAULT 'ativo',
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_produto_pai INT NULL,
+    FOREIGN KEY (id_produto_pai) REFERENCES produtos(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS estoque (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    produto_id INT NOT NULL,
+    quantidade INT NOT NULL,
+    UNIQUE(produto_id),
+    FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS cupons (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(50) UNIQUE NOT NULL,
+    `status` VARCHAR(45) NOT NULL DEFAULT 'ativo',
+    valor_minimo DECIMAL(10, 2) NOT NULL,
+    percentual INT NOT NULL DEFAULT 0,
+    validade DATE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    frete DECIMAL(10, 2) NOT NULL,
+    valor_desconto DECIMAL(10,2) NOT NULL DEFAULT 0,
+    total DECIMAL(10, 2) NOT NULL,
+    cep VARCHAR(10) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    endereco TEXT,
+    email_cliente VARCHAR(100),
+    data_modificacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
